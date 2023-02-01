@@ -1,29 +1,23 @@
 use async_trait::async_trait;
+use serde::Deserialize;
 
-#[derive(Clone, Hash, Eq, PartialEq)]
-pub struct ClusterContext(String);
+#[derive(Clone, Debug, Deserialize, Hash, Eq, PartialEq)]
+pub struct ClusterContext(pub String);
 
-#[derive(Clone, Hash, Eq, PartialEq)]
-pub struct Namespace(String);
+#[derive(Clone, Debug, Deserialize, Hash, Eq, PartialEq)]
+pub struct Namespace(pub String);
 
-#[derive(Clone, Hash, Eq, PartialEq)]
-pub struct DeploymentName(String);
+#[derive(Clone, Debug, Deserialize, Hash, Eq, PartialEq)]
+pub struct DeploymentName(pub String);
 
-#[derive(Clone, Hash, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Hash, Eq, PartialEq)]
 pub struct DeploymentId {
     pub context: ClusterContext,
     pub namespace: Namespace,
     pub deployment: DeploymentName,
 }
 
-pub fn deployment_id(context: String, namespace: String, deployment: String) -> DeploymentId {
-    DeploymentId {
-        context: ClusterContext(context),
-        namespace: Namespace(namespace),
-        deployment: DeploymentName(deployment),
-    }
-}
-
+#[derive(Debug)]
 pub enum DeploymentStatus {
     OK,
     NonOK,

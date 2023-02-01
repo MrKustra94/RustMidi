@@ -13,37 +13,6 @@ pub struct PadMapping {
     pub red_data_byte: DataByte,
 }
 
-pub fn pad_mapping(
-    status: u8,
-    fst_data_byte: u8,
-    green_data_byte: u8,
-    yellow_data_byte: u8,
-    orange_data_byte: u8,
-    red_data_byte: u8,
-) -> Option<PadMapping> {
-    Status::from_u8(status)
-        .zip(DataByte::from_u8(fst_data_byte))
-        .zip(DataByte::from_u8(green_data_byte))
-        .zip(DataByte::from_u8(yellow_data_byte))
-        .zip(DataByte::from_u8(orange_data_byte))
-        .zip(DataByte::from_u8(red_data_byte))
-        .map(
-            |(
-                ((((status, fst_data_byte), green_data_byte), yellow_data_byte), orange_data_byte),
-                red_data_byte,
-            )| {
-                PadMapping {
-                    status,
-                    fst_data_byte,
-                    green_data_byte,
-                    yellow_data_byte,
-                    orange_data_byte,
-                    red_data_byte,
-                }
-            },
-        )
-}
-
 pub trait MidiRegistry {
     fn get<'a, 's: 'a>(&'s self, deployment_id: &'a DeploymentId) -> Option<Cow<'a, PadMapping>>;
 }

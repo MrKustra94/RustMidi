@@ -1,11 +1,12 @@
 use async_channel::{unbounded, Receiver, Sender};
+use serde::Deserialize;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tokio::task::JoinHandle;
 
 use crate::kubernetes::model::DeploymentId;
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct Seconds(pub u64);
 
 #[derive(Clone)]
