@@ -2,7 +2,7 @@
 name = "rust_midi"
 version = "0.0.1"
 edition = "2021"
-author = "Marcin Kustra"
+author = "Marcin Kustra <marcinkustra1994@gmail.com>"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

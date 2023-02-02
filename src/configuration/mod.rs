@@ -1,9 +1,10 @@
 use crate::kubernetes::model::{ClusterContext, DeploymentId, DeploymentName, Namespace};
 use crate::midi::model::{DataByte, Status};
 use crate::midi::registry::model::PadMapping;
-use crate::scheduler::DeploymentCheckTask;
-use crate::{K8sToPadMidiMapping, ReadOnlyMidiRegistryConfig, Seconds};
+use crate::worker::k8s_worker::{K8sWorkerContext, Seconds};
+use crate::{K8sToPadMidiMapping, ReadOnlyMidiRegistryConfig};
 use serde::Deserialize;
+use serde_yaml::Value;
 use std::path::Path;
 
 #[derive(Debug, Deserialize)]
@@ -48,18 +49,12 @@ pub struct K8sMidiMapping {
 
 pub fn load_from_yaml<P: AsRef<Path>>(path: P) -> anyhow::Result<K8sMidiMapping> {
     let conf_file = std::fs::File::open(path)?;
-    Ok(serde_yaml::from_reader(conf_file)?)
-}
-
-pub fn to_deployment_check_tasks(mapping: &K8sMidiMapping) -> Vec<DeploymentCheckTask> {
-    mapping
-        .mappings
-        .iter()
-        .map(|mapping| DeploymentCheckTask {
-            deployment_id: mapping.deployment.clone(),
-            schedule_every_seconds: mapping.schedule_seconds.clone(),
-        })
-        .collect()
+    // Workaround for merge anchors.
+    // Useful for better file readability.
+    // https://github.com/dtolnay/serde-yaml/issues/317
+    let mut yaml_value: Value = serde_yaml::from_reader(conf_file)?;
+    yaml_value.apply_merge()?;
+    Ok(serde_yaml::from_value(yaml_value)?)
 }
 
 pub fn to_midi_registry_config(midi_mapping: &K8sMidiMapping) -> ReadOnlyMidiRegistryConfig {
@@ -81,4 +76,15 @@ pub fn to_midi_registry_config(midi_mapping: &K8sMidiMapping) -> ReadOnlyMidiReg
     ReadOnlyMidiRegistryConfig {
         mappings: config_mappings.collect(),
     }
+}
+
+pub fn to_k8s_worker_contexts(midi_mapping: &K8sMidiMapping) -> Vec<K8sWorkerContext> {
+    midi_mapping
+        .mappings
+        .iter()
+        .map(|mapping| K8sWorkerContext {
+            deployment_id: mapping.deployment.clone(),
+            schedule_every_seconds: mapping.schedule_seconds.clone(),
+        })
+        .collect()
 }
