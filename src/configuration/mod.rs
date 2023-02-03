@@ -1,11 +1,13 @@
-use crate::kubernetes::model::{ClusterContext, DeploymentId, DeploymentName, Namespace};
-use crate::midi::model::{DataByte, Status};
-use crate::midi::registry::model::PadMapping;
-use crate::worker::k8s::{K8sWorkerContext, Seconds};
-use crate::{K8sToPadMidiMapping, ReadOnlyMidiRegistryConfig};
+use std::path::Path;
+
 use serde::Deserialize;
 use serde_yaml::Value;
-use std::path::Path;
+
+use crate::kubernetes::model::{ClusterContext, DeploymentId, DeploymentName, Namespace};
+use crate::midi::model::{ColorMapping, DataByte, PadMapping, Status};
+use crate::worker::k8s;
+use crate::worker::script;
+use crate::worker::Seconds;
 
 #[derive(Debug, Deserialize)]
 pub struct PadColors {
@@ -38,13 +40,38 @@ pub struct K8sPadMapping {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct ScriptPadMapping {
+    #[serde(default = "script::Envs::empty")]
+    pub envs: script::Envs,
+    pub command: script::Command,
+    #[serde(default = "script::CommandArgs::empty")]
+    pub args: script::CommandArgs,
+    #[serde(flatten)]
+    pub pad: Pad,
+    pub schedule_seconds: Seconds,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(tag = "type")]
+pub enum ConfigMapping {
+    K8S(K8sPadMapping),
+    Script(ScriptPadMapping),
+}
+
+#[derive(Debug, Deserialize)]
 pub struct ControllerName(pub String);
+
+#[derive(Debug, Deserialize)]
+pub struct ControllerMappings {
+    pub color_palette: PadColors,
+    pub mappings: Vec<ConfigMapping>,
+}
 
 #[derive(Debug, Deserialize)]
 pub struct K8sMidiMapping {
     pub controller_name: ControllerName,
-    pub color_palette: PadColors,
-    pub mappings: Vec<K8sPadMapping>,
+    #[serde(flatten)]
+    pub controller_mappings: ControllerMappings,
 }
 
 pub fn load_from_yaml<P: AsRef<Path>>(path: P) -> anyhow::Result<K8sMidiMapping> {
@@ -57,34 +84,46 @@ pub fn load_from_yaml<P: AsRef<Path>>(path: P) -> anyhow::Result<K8sMidiMapping>
     Ok(serde_yaml::from_value(yaml_value)?)
 }
 
-pub fn to_midi_registry_config(midi_mapping: &K8sMidiMapping) -> ReadOnlyMidiRegistryConfig {
-    let config_mappings = midi_mapping
-        .mappings
-        .iter()
-        .map(|mapping| K8sToPadMidiMapping {
-            deployment_id: mapping.deployment.clone(),
-            pad_midi_mapping: PadMapping {
-                status: mapping.pad.status,
-                fst_data_byte: mapping.pad.fst_data_byte,
-                green_data_byte: midi_mapping.color_palette.green,
-                yellow_data_byte: midi_mapping.color_palette.yellow,
-                orange_data_byte: midi_mapping.color_palette.orange,
-                red_data_byte: midi_mapping.color_palette.red,
-            },
-        });
-
-    ReadOnlyMidiRegistryConfig {
-        mappings: config_mappings.collect(),
-    }
+pub enum ParsedContext {
+    K8S(k8s::K8sContext),
+    Script(script::ScriptContext),
 }
 
-pub fn to_k8s_worker_contexts(midi_mapping: &K8sMidiMapping) -> Vec<K8sWorkerContext> {
-    midi_mapping
+pub fn extract_contexts(controller_mappings: ControllerMappings) -> Vec<ParsedContext> {
+    controller_mappings
         .mappings
-        .iter()
-        .map(|mapping| K8sWorkerContext {
-            deployment_id: mapping.deployment.clone(),
-            schedule_every_seconds: mapping.schedule_seconds.clone(),
+        .into_iter()
+        .map(|mapping| match mapping {
+            ConfigMapping::K8S(k8s_m) => ParsedContext::K8S(k8s::K8sContext {
+                deployment_id: k8s_m.deployment,
+                schedule_every_seconds: k8s_m.schedule_seconds,
+                pad_mapping: PadMapping {
+                    status: k8s_m.pad.status,
+                    fst_data_byte: k8s_m.pad.fst_data_byte,
+                    color_mapping: ColorMapping {
+                        green_data_byte: controller_mappings.color_palette.green,
+                        yellow_data_byte: controller_mappings.color_palette.yellow,
+                        orange_data_byte: controller_mappings.color_palette.orange,
+                        red_data_byte: controller_mappings.color_palette.red,
+                    },
+                },
+            }),
+            ConfigMapping::Script(script_m) => ParsedContext::Script(script::ScriptContext {
+                envs: script_m.envs,
+                command: script_m.command,
+                args: script_m.args,
+                pad_mapping: PadMapping {
+                    status: script_m.pad.status,
+                    fst_data_byte: script_m.pad.fst_data_byte,
+                    color_mapping: ColorMapping {
+                        green_data_byte: controller_mappings.color_palette.green,
+                        yellow_data_byte: controller_mappings.color_palette.yellow,
+                        orange_data_byte: controller_mappings.color_palette.orange,
+                        red_data_byte: controller_mappings.color_palette.red,
+                    },
+                },
+                schedule_seconds: script_m.schedule_seconds,
+            }),
         })
         .collect()
 }

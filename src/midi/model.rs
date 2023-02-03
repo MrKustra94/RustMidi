@@ -103,6 +103,47 @@ pub struct MidiMessage {
     pub snd_data_byte: DataByte,
 }
 
+#[derive(Clone)]
+pub struct ColorMapping {
+    pub green_data_byte: DataByte,
+    pub yellow_data_byte: DataByte,
+    pub orange_data_byte: DataByte,
+    pub red_data_byte: DataByte,
+}
+
+#[derive(Clone)]
+pub struct PadMapping {
+    pub status: Status,
+    pub fst_data_byte: DataByte,
+    pub color_mapping: ColorMapping,
+}
+
+impl PadMapping {
+    fn to_message(&self, snd_data_byte: DataByte) -> MidiMessage {
+        MidiMessage {
+            status: self.status,
+            fst_data_byte: self.fst_data_byte,
+            snd_data_byte,
+        }
+    }
+
+    pub fn green_message(&self) -> MidiMessage {
+        self.to_message(self.color_mapping.green_data_byte)
+    }
+
+    pub fn orange_message(&self) -> MidiMessage {
+        self.to_message(self.color_mapping.orange_data_byte)
+    }
+
+    pub fn red_message(&self) -> MidiMessage {
+        self.to_message(self.color_mapping.red_data_byte)
+    }
+
+    pub fn yellow_message(&self) -> MidiMessage {
+        self.to_message(self.color_mapping.yellow_data_byte)
+    }
+}
+
 #[derive(Debug, thiserror::Error)]
 #[error("Sending MIDI Message failed. Reason: {human_friendly_description}.\n Details: {underlying_error:?}")]
 pub struct SendFailed<'a> {
@@ -112,4 +153,8 @@ pub struct SendFailed<'a> {
 
 pub trait MidiSender {
     fn send(&self, msg: MidiMessage) -> Result<(), SendFailed>;
+
+    fn send_and_forget(&self, msg: MidiMessage) {
+        let _ = self.send(msg);
+    }
 }

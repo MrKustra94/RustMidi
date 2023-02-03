@@ -5,9 +5,7 @@ use kube_client::config::KubeConfigOptions;
 use kube_client::{Api, Client, Config};
 
 use crate::kubernetes::model::DeploymentStatus::{NonOK, OK};
-use crate::kubernetes::model::{
-    ClusterContext, DeploymentName, DeploymentStatus, K8sClient, Namespace,
-};
+use crate::kubernetes::model::{DeploymentId, DeploymentStatus, K8sClient};
 
 pub struct KubeRsBased;
 
@@ -15,19 +13,17 @@ pub struct KubeRsBased;
 impl K8sClient for KubeRsBased {
     async fn check_deployment(
         &self,
-        context: &ClusterContext,
-        namespace: &Namespace,
-        deployment: &DeploymentName,
+        deployment_id: &DeploymentId,
     ) -> anyhow::Result<DeploymentStatus> {
         let context_options = KubeConfigOptions {
-            context: Some(context.0.clone()),
+            context: Some(deployment_id.context.0.clone()),
             ..Default::default()
         };
         let config = Config::from_kubeconfig(&context_options).await?;
         let client = Client::try_from(config)?;
 
-        let deployment: Deployment = Api::namespaced(client, namespace.0.as_str())
-            .get(deployment.0.as_str())
+        let deployment: Deployment = Api::namespaced(client, deployment_id.namespace.0.as_str())
+            .get(deployment_id.deployment.0.as_str())
             .await?;
         if let Some(status) = deployment.status {
             if status.replicas == status.ready_replicas {

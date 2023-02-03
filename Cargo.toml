@@ -9,6 +9,7 @@ author = "Marcin Kustra <marcinkustra1994@gmail.com>"
 [dependencies]
 anyhow = "~1.0"
 async-channel = "1.8.0"
+async-process = "1.6.0"
 async-trait = "0.1.63"
 crossbeam-channel = "0.5.6"
 k8s-openapi = { version = "~0.17", features = ["v1_24"] }

@@ -27,8 +27,6 @@ pub enum DeploymentStatus {
 pub trait K8sClient {
     async fn check_deployment(
         &self,
-        context: &ClusterContext,
-        namespace: &Namespace,
-        deployment: &DeploymentName,
+        deployment_id: &DeploymentId,
     ) -> anyhow::Result<DeploymentStatus>;
 }
