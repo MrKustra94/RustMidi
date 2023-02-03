@@ -1,7 +1,7 @@
 use crate::kubernetes::model::{ClusterContext, DeploymentId, DeploymentName, Namespace};
 use crate::midi::model::{DataByte, Status};
 use crate::midi::registry::model::PadMapping;
-use crate::worker::k8s_worker::{K8sWorkerContext, Seconds};
+use crate::worker::k8s::{K8sWorkerContext, Seconds};
 use crate::{K8sToPadMidiMapping, ReadOnlyMidiRegistryConfig};
 use serde::Deserialize;
 use serde_yaml::Value;

@@ -9,7 +9,7 @@ mod worker;
 use crate::midi::controller::midir::MidirBased;
 use crate::midi::model::{MidiMessage, MidiSender};
 use crate::midi::registry::inmem::{K8sToPadMidiMapping, ReadOnlyMidiRegistryConfig};
-use crate::worker::k8s_worker::{
+use crate::worker::k8s::{
     CheckDeploymentHandler, K8sWorker, WorkerK8sClient, WorkerMidiRegistry, WorkerMidiSender,
 };
 use std::sync::Arc;
@@ -38,6 +38,7 @@ async fn main() -> anyhow::Result<()> {
         .into_iter()
         .map(|config| K8sWorker::start_worker(deployment_check_handler.clone(), &config))
         .collect();
+
     for worker in workers {
         let _ = worker.0.await;
     }

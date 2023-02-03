@@ -1,1 +1,1 @@
-pub mod k8s_worker;
+pub mod k8s;
