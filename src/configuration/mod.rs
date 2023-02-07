@@ -15,6 +15,8 @@ pub struct PadColors {
     pub red: DataByte,
     pub orange: DataByte,
     pub yellow: DataByte,
+    pub blue: DataByte,
+    pub white: DataByte,
 }
 
 #[derive(Debug, Deserialize)]
@@ -105,6 +107,8 @@ pub fn extract_contexts(controller_mappings: ControllerMappings) -> Vec<ParsedCo
                         yellow_data_byte: controller_mappings.color_palette.yellow,
                         orange_data_byte: controller_mappings.color_palette.orange,
                         red_data_byte: controller_mappings.color_palette.red,
+                        blue_data_byte: controller_mappings.color_palette.blue,
+                        white_data_byte: controller_mappings.color_palette.white,
                     },
                 },
             }),
@@ -120,6 +124,8 @@ pub fn extract_contexts(controller_mappings: ControllerMappings) -> Vec<ParsedCo
                         yellow_data_byte: controller_mappings.color_palette.yellow,
                         orange_data_byte: controller_mappings.color_palette.orange,
                         red_data_byte: controller_mappings.color_palette.red,
+                        blue_data_byte: controller_mappings.color_palette.blue,
+                        white_data_byte: controller_mappings.color_palette.white,
                     },
                 },
                 schedule_seconds: script_m.schedule_seconds,

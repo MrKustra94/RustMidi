@@ -36,6 +36,8 @@ impl CheckDeploymentHandler {
         let msg = match deployment_status {
             Ok(DeploymentStatus::OK) => mapping.green_message(),
             Ok(DeploymentStatus::NonOK) => mapping.red_message(),
+            Ok(DeploymentStatus::InProgress) => mapping.blue_message(),
+            Ok(DeploymentStatus::Unknown) => mapping.white_message(),
             Err(_) => mapping.orange_message(),
         };
         self.midi_sender.send_and_forget(msg)

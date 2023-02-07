@@ -5,7 +5,7 @@ pub struct JustPrint;
 
 impl MidiSender for JustPrint {
     fn send(&self, msg: MidiMessage) -> Result<(), SendFailed> {
-        println!("Sent: {:?}", msg);
+        println!("Sent: {msg:?}");
         Ok(())
     }
 }

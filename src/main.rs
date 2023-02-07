@@ -12,11 +12,20 @@ use crate::midi::model::{MidiMessage, MidiSender};
 use crate::worker::k8s::{CheckDeploymentHandler, K8sWorker};
 use crate::worker::script::{ScriptHandler, ScriptWorker};
 use crate::worker::{WorkerK8sClient, WorkerMidiSender};
+use clap::Parser;
 use std::sync::Arc;
+
+#[derive(Parser)]
+struct CLIArgs {
+    #[arg(short = 'p', long, default_value = "midi_config.yaml")]
+    pub config_path: String,
+}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let configuration = configuration::load_from_yaml("my_file.yaml")?;
+    let cli_args = CLIArgs::parse();
+
+    let configuration = configuration::load_from_yaml(cli_args.config_path)?;
     let controller_name = configuration.controller_name;
     let controller_mappings = configuration.controller_mappings;
 

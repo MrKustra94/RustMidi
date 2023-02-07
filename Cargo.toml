@@ -8,13 +8,14 @@ author = "Marcin Kustra <marcinkustra1994@gmail.com>"
 
 [dependencies]
 anyhow = "~1.0"
-async-channel = "1.8.0"
-async-process = "1.6.0"
-async-trait = "0.1.63"
-crossbeam-channel = "0.5.6"
+async-channel = "~1.8"
+async-process = "~1.6"
+async-trait = "~0.1"
+clap = { version = "~4.0", features = ["derive"] }
+crossbeam-channel = "~0.5"
 k8s-openapi = { version = "~0.17", features = ["v1_24"] }
 kube = { version = "~0.78", features = ["runtime"] }
-kube-client = { version = "0.78.0" }
+kube-client = { version = "~0.78" }
 midir = "~0.8"
 serde = { version = "~1.0", features = ["derive"] }
 serde_yaml = "~0.9"

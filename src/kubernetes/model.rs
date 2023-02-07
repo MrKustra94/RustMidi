@@ -20,7 +20,9 @@ pub struct DeploymentId {
 #[derive(Debug)]
 pub enum DeploymentStatus {
     OK,
+    InProgress,
     NonOK,
+    Unknown,
 }
 
 #[async_trait]

@@ -43,7 +43,7 @@ impl MidirBased {
     }
 
     fn prepare_midi_out_connection(controller: &str) -> Result<MidiOutputConnection> {
-        let midi_port = midir::MidiOutput::new(&format!("{}-client", controller))?;
+        let midi_port = midir::MidiOutput::new(&format!("{controller}-client"))?;
         Ok(Self::set_up_connection(midi_port, controller).unwrap())
     }
 

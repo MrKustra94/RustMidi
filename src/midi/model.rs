@@ -40,8 +40,7 @@ impl<'de> Visitor<'de> for StatusVisitor {
 
         match parse_res {
             None => Err(E::custom(format!(
-                "Expecting status to be u8 between 0x80 and 0xFF. Got: {}.",
-                v
+                "Expecting status to be u8 between 0x80 and 0xFF. Got: {v}."
             ))),
             Some(status) => Ok(status),
         }
@@ -88,8 +87,7 @@ impl<'de> Visitor<'de> for DataByteVisitor {
 
         match parse_res {
             None => Err(E::custom(format!(
-                "Expecting data byte to be u8 between 0x00 and 0x7F. Got: {}.",
-                v
+                "Expecting data byte to be u8 between 0x00 and 0x7F. Got: {v}."
             ))),
             Some(db) => Ok(db),
         }
@@ -109,6 +107,8 @@ pub struct ColorMapping {
     pub yellow_data_byte: DataByte,
     pub orange_data_byte: DataByte,
     pub red_data_byte: DataByte,
+    pub blue_data_byte: DataByte,
+    pub white_data_byte: DataByte,
 }
 
 #[derive(Clone)]
@@ -141,6 +141,14 @@ impl PadMapping {
 
     pub fn yellow_message(&self) -> MidiMessage {
         self.to_message(self.color_mapping.yellow_data_byte)
+    }
+
+    pub fn blue_message(&self) -> MidiMessage {
+        self.to_message(self.color_mapping.blue_data_byte)
+    }
+
+    pub fn white_message(&self) -> MidiMessage {
+        self.to_message(self.color_mapping.white_data_byte)
     }
 }
 
