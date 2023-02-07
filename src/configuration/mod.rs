@@ -9,7 +9,7 @@ use crate::worker::k8s;
 use crate::worker::script;
 use crate::worker::Seconds;
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize)]
 pub struct PadColors {
     pub green: DataByte,
     pub red: DataByte,
@@ -17,6 +17,19 @@ pub struct PadColors {
     pub yellow: DataByte,
     pub blue: DataByte,
     pub white: DataByte,
+}
+
+impl From<PadColors> for ColorMapping {
+    fn from(value: PadColors) -> Self {
+        ColorMapping {
+            green: value.green,
+            yellow: value.yellow,
+            orange: value.orange,
+            red: value.red,
+            blue: value.blue,
+            white: value.white,
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -102,33 +115,19 @@ pub fn extract_contexts(controller_mappings: ControllerMappings) -> Vec<ParsedCo
                 pad_mapping: PadMapping {
                     status: k8s_m.pad.status,
                     fst_data_byte: k8s_m.pad.fst_data_byte,
-                    color_mapping: ColorMapping {
-                        green_data_byte: controller_mappings.color_palette.green,
-                        yellow_data_byte: controller_mappings.color_palette.yellow,
-                        orange_data_byte: controller_mappings.color_palette.orange,
-                        red_data_byte: controller_mappings.color_palette.red,
-                        blue_data_byte: controller_mappings.color_palette.blue,
-                        white_data_byte: controller_mappings.color_palette.white,
-                    },
+                    color_mapping: ColorMapping::from(controller_mappings.color_palette),
                 },
             }),
             ConfigMapping::Script(script_m) => ParsedContext::Script(script::ScriptContext {
                 envs: script_m.envs,
                 command: script_m.command,
                 args: script_m.args,
+                schedule_seconds: script_m.schedule_seconds,
                 pad_mapping: PadMapping {
                     status: script_m.pad.status,
                     fst_data_byte: script_m.pad.fst_data_byte,
-                    color_mapping: ColorMapping {
-                        green_data_byte: controller_mappings.color_palette.green,
-                        yellow_data_byte: controller_mappings.color_palette.yellow,
-                        orange_data_byte: controller_mappings.color_palette.orange,
-                        red_data_byte: controller_mappings.color_palette.red,
-                        blue_data_byte: controller_mappings.color_palette.blue,
-                        white_data_byte: controller_mappings.color_palette.white,
-                    },
+                    color_mapping: ColorMapping::from(controller_mappings.color_palette),
                 },
-                schedule_seconds: script_m.schedule_seconds,
             }),
         })
         .collect()

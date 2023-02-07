@@ -103,12 +103,12 @@ pub struct MidiMessage {
 
 #[derive(Clone)]
 pub struct ColorMapping {
-    pub green_data_byte: DataByte,
-    pub yellow_data_byte: DataByte,
-    pub orange_data_byte: DataByte,
-    pub red_data_byte: DataByte,
-    pub blue_data_byte: DataByte,
-    pub white_data_byte: DataByte,
+    pub green: DataByte,
+    pub yellow: DataByte,
+    pub orange: DataByte,
+    pub red: DataByte,
+    pub blue: DataByte,
+    pub white: DataByte,
 }
 
 #[derive(Clone)]
@@ -128,27 +128,27 @@ impl PadMapping {
     }
 
     pub fn green_message(&self) -> MidiMessage {
-        self.to_message(self.color_mapping.green_data_byte)
+        self.to_message(self.color_mapping.green)
     }
 
     pub fn orange_message(&self) -> MidiMessage {
-        self.to_message(self.color_mapping.orange_data_byte)
+        self.to_message(self.color_mapping.orange)
     }
 
     pub fn red_message(&self) -> MidiMessage {
-        self.to_message(self.color_mapping.red_data_byte)
+        self.to_message(self.color_mapping.red)
     }
 
     pub fn yellow_message(&self) -> MidiMessage {
-        self.to_message(self.color_mapping.yellow_data_byte)
+        self.to_message(self.color_mapping.yellow)
     }
 
     pub fn blue_message(&self) -> MidiMessage {
-        self.to_message(self.color_mapping.blue_data_byte)
+        self.to_message(self.color_mapping.blue)
     }
 
     pub fn white_message(&self) -> MidiMessage {
-        self.to_message(self.color_mapping.white_data_byte)
+        self.to_message(self.color_mapping.white)
     }
 }
 
