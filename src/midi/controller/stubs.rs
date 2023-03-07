@@ -1,10 +1,9 @@
-use crate::midi::model::SendFailed;
-use crate::{MidiMessage, MidiSender};
+use crate::midi::model::{MidiMessage, MidiSendFailed, MidiSender};
 
 pub struct JustPrint;
 
 impl MidiSender for JustPrint {
-    fn send(&self, msg: MidiMessage) -> Result<(), SendFailed> {
+    fn send(&self, msg: MidiMessage) -> Result<(), MidiSendFailed> {
         println!("Sent: {msg:?}");
         Ok(())
     }

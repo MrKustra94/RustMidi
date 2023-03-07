@@ -1,16 +1,13 @@
-use async_trait::async_trait;
-use serde::Deserialize;
-
-#[derive(Clone, Debug, Deserialize, Hash, Eq, PartialEq)]
+#[derive(Debug, serde::Deserialize)]
 pub struct ClusterContext(pub String);
 
-#[derive(Clone, Debug, Deserialize, Hash, Eq, PartialEq)]
+#[derive(Debug, serde::Deserialize)]
 pub struct Namespace(pub String);
 
-#[derive(Clone, Debug, Deserialize, Hash, Eq, PartialEq)]
+#[derive(Debug, serde::Deserialize)]
 pub struct DeploymentName(pub String);
 
-#[derive(Clone, Debug, Deserialize, Hash, Eq, PartialEq)]
+#[derive(Debug, serde::Deserialize)]
 pub struct DeploymentId {
     pub context: ClusterContext,
     pub namespace: Namespace,
@@ -25,7 +22,7 @@ pub enum DeploymentStatus {
     Unknown,
 }
 
-#[async_trait]
+#[async_trait::async_trait]
 pub trait K8sClient {
     async fn check_deployment(
         &self,

@@ -1,11 +1,8 @@
-use anyhow::Result;
 use crossbeam_channel as cch;
-use midir::MidiOutputConnection;
 use std::thread;
 use std::thread::JoinHandle;
 
-use crate::midi::model;
-use crate::midi::model::{MidiMessage, SendFailed};
+use crate::midi::model::{MidiMessage, MidiSendFailed, MidiSender};
 
 struct AsU8s(MidiMessage);
 
@@ -25,7 +22,7 @@ pub struct MidirBased {
 }
 
 impl MidirBased {
-    pub fn new(controller: &str) -> Result<MidirBased> {
+    pub fn new(controller: &str) -> anyhow::Result<MidirBased> {
         let mut midi_out = Self::prepare_midi_out_connection(controller)?;
         let (sender, receiver) = cch::unbounded();
         let _sending_loop = thread::spawn(move || {
@@ -42,12 +39,19 @@ impl MidirBased {
         })
     }
 
-    fn prepare_midi_out_connection(controller: &str) -> Result<MidiOutputConnection> {
+    fn prepare_midi_out_connection(
+        controller: &str,
+    ) -> anyhow::Result<midir::MidiOutputConnection> {
         let midi_port = midir::MidiOutput::new(&format!("{controller}-client"))?;
-        Ok(Self::set_up_connection(midi_port, controller).unwrap())
+        Self::set_up_connection(midi_port, controller).ok_or_else(|| {
+            anyhow::Error::msg(format!("Couldn't set up connection with {controller}."))
+        })
     }
 
-    fn set_up_connection(mo: midir::MidiOutput, controller: &str) -> Option<MidiOutputConnection> {
+    fn set_up_connection(
+        mo: midir::MidiOutput,
+        controller: &str,
+    ) -> Option<midir::MidiOutputConnection> {
         mo.ports()
             .iter()
             .find_map(|p| {
@@ -60,11 +64,8 @@ impl MidirBased {
     }
 }
 
-impl model::MidiSender for MidirBased {
-    fn send(&self, msg: MidiMessage) -> Result<(), SendFailed> {
-        self.sender.send(msg).map_err(|e| SendFailed {
-            human_friendly_description: "Enqueuing message failed.",
-            underlying_error: Some(Box::new(e)),
-        })
+impl MidiSender for MidirBased {
+    fn send(&self, msg: MidiMessage) -> Result<(), MidiSendFailed> {
+        self.sender.send(msg).map_err(|e| MidiSendFailed(e.into()))
     }
 }
