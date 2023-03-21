@@ -1,12 +1,9 @@
-use crate::extensions::option::OptionExt;
+use crate::extension::OptionExt;
 
-use serde::de::{Error, Visitor};
-use serde::{Deserialize, Deserializer};
-use std::error;
-use std::fmt::Formatter;
 use thiserror;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Eq, Hash, PartialEq, Clone, Copy, Debug, serde::Deserialize)]
+#[serde(try_from = "u8")]
 pub struct Status(u8);
 
 const U8_MSB_EXTRACTOR: u8 = 0x80;
@@ -21,43 +18,24 @@ impl Status {
             Status(status)
         })
     }
-}
 
-struct StatusVisitor;
-
-impl<'de> Visitor<'de> for StatusVisitor {
-    type Value = Status;
-
-    fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
-        formatter.write_str("Expecting status to be u8 between 0x80 and 0xFF.")
-    }
-
-    fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
-    where
-        E: Error,
-    {
-        let parse_res = u8::try_from(v).ok().and_then(Status::from_u8);
-
-        match parse_res {
-            None => Err(E::custom(format!(
-                "Expecting status to be u8 between 0x80 and 0xFF. Got: {v}."
-            ))),
-            Some(status) => Ok(status),
-        }
+    pub unsafe fn from_u8_unsafe(status: u8) -> Status {
+        Status(status)
     }
 }
 
-impl<'de> Deserialize<'de> for Status {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        deserializer.deserialize_u8(StatusVisitor)
+impl TryFrom<u8> for Status {
+    type Error = String;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        Status::from_u8(value).ok_or(format!(
+            "Expected status to be between 128 and 255. Got {value}"
+        ))
     }
 }
 
-#[derive(Clone, Copy, Debug, Deserialize)]
-#[repr(transparent)]
+#[derive(Eq, Hash, PartialEq, Clone, Copy, Debug, serde::Deserialize)]
+#[serde(try_from = "u8")]
 pub struct DataByte(u8);
 
 impl DataByte {
@@ -68,29 +46,19 @@ impl DataByte {
     pub fn from_u8(db: u8) -> Option<DataByte> {
         Option::when(db & U8_MSB_EXTRACTOR == 0, || DataByte(db))
     }
+
+    pub unsafe fn from_u8_unsafe(status: u8) -> DataByte {
+        DataByte(status)
+    }
 }
 
-struct DataByteVisitor;
+impl TryFrom<u8> for DataByte {
+    type Error = String;
 
-impl<'de> Visitor<'de> for DataByteVisitor {
-    type Value = DataByte;
-
-    fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
-        formatter.write_str("Expecting data byte to be u8 between 0x00 and 0x7F.")
-    }
-
-    fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
-    where
-        E: Error,
-    {
-        let parse_res = u8::try_from(v).ok().and_then(DataByte::from_u8);
-
-        match parse_res {
-            None => Err(E::custom(format!(
-                "Expecting data byte to be u8 between 0x00 and 0x7F. Got: {v}."
-            ))),
-            Some(db) => Ok(db),
-        }
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        DataByte::from_u8(value).ok_or(format!(
+            "Expected data byte to be between 0 and 127. Got {value}."
+        ))
     }
 }
 
@@ -101,68 +69,17 @@ pub struct MidiMessage {
     pub snd_data_byte: DataByte,
 }
 
-#[derive(Clone)]
-pub struct ColorMapping {
-    pub green: DataByte,
-    pub yellow: DataByte,
-    pub orange: DataByte,
-    pub red: DataByte,
-    pub blue: DataByte,
-    pub white: DataByte,
-}
-
-#[derive(Clone)]
-pub struct PadMapping {
-    pub status: Status,
-    pub fst_data_byte: DataByte,
-    pub color_mapping: ColorMapping,
-}
-
-impl PadMapping {
-    fn to_message(&self, snd_data_byte: DataByte) -> MidiMessage {
-        MidiMessage {
-            status: self.status,
-            fst_data_byte: self.fst_data_byte,
-            snd_data_byte,
-        }
-    }
-
-    pub fn green_message(&self) -> MidiMessage {
-        self.to_message(self.color_mapping.green)
-    }
-
-    pub fn orange_message(&self) -> MidiMessage {
-        self.to_message(self.color_mapping.orange)
-    }
-
-    pub fn red_message(&self) -> MidiMessage {
-        self.to_message(self.color_mapping.red)
-    }
-
-    pub fn yellow_message(&self) -> MidiMessage {
-        self.to_message(self.color_mapping.yellow)
-    }
-
-    pub fn blue_message(&self) -> MidiMessage {
-        self.to_message(self.color_mapping.blue)
-    }
-
-    pub fn white_message(&self) -> MidiMessage {
-        self.to_message(self.color_mapping.white)
-    }
-}
-
 #[derive(Debug, thiserror::Error)]
-#[error("Sending MIDI Message failed. Reason: {human_friendly_description}.\n Details: {underlying_error:?}")]
-pub struct SendFailed<'a> {
-    pub human_friendly_description: &'a str,
-    pub underlying_error: Option<Box<dyn error::Error>>,
-}
+#[error(transparent)]
+pub struct MidiSendFailed(#[from] pub anyhow::Error);
 
 pub trait MidiSender {
-    fn send(&self, msg: MidiMessage) -> Result<(), SendFailed>;
+    fn send(&self, msg: MidiMessage) -> Result<(), MidiSendFailed>;
 
     fn send_and_forget(&self, msg: MidiMessage) {
         let _ = self.send(msg);
     }
+}
+pub trait MidiReceiver {
+    fn poll(&self) -> Option<MidiMessage>;
 }
