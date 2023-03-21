@@ -14,10 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Install ALSA
+    - name: Install ALSA & Jack deps
       run: |
         sudo apt-get update
-        sudo apt-get -y install alsa-tools
+        sudo apt-get install -y libasound2-dev libjack-jackd2-dev
     - name: Build
       run: cargo build --verbose
     - name: Lint
