@@ -1,0 +1,28 @@
+name: Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install ALSA & Jack deps
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libasound2-dev libjack-jackd2-dev
+    - name: Build
+      run: cargo build --verbose
+    - name: Lint
+      run: |
+        cargo fmt -- --check
+        cargo clippy -- -D warnings   
+    - name: Run tests
+      run: cargo test --verbose
