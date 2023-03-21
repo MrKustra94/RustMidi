@@ -40,7 +40,7 @@ pub struct PadConfig {
 
 #[derive(Debug, serde::Deserialize)]
 pub struct K8sMidiMapping {
-    pub controller_name: Option<String>,
+    pub controller_name: String,
     pub color_palette: Arc<actor::ColorMapping>,
     pub mappings: Vec<PadConfig>,
 }
@@ -83,7 +83,7 @@ pub struct ParsedPadConfig {
 }
 
 pub struct ParsedPadConfigs {
-    pub controller_name: Option<String>,
+    pub controller_name: String,
     pub pad_configs: Vec<ParsedPadConfig>,
 }
 

@@ -25,7 +25,7 @@ impl K8SDeploymentHandler {
 
 #[async_trait::async_trait]
 impl PadHandler for K8SDeploymentHandler {
-    async fn handle(&self) -> PadOutput {
+    async fn handle(&mut self) -> PadOutput {
         let deployment_id = &self.config.deployment_id;
         let deployment_status = self.k8s_client.check_deployment(deployment_id).await;
 

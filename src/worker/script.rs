@@ -21,7 +21,7 @@ impl ScriptHandler {
 
 #[async_trait::async_trait]
 impl PadHandler for ScriptHandler {
-    async fn handle(&self) -> PadOutput {
+    async fn handle(&mut self) -> PadOutput {
         let command = async_process::Command::new(&self.config.command)
             .args(&self.config.args)
             .envs(&self.config.envs)

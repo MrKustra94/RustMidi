@@ -2,7 +2,7 @@ use crate::extension::OptionExt;
 
 use thiserror;
 
-#[derive(Clone, Copy, Debug, serde::Deserialize)]
+#[derive(Eq, Hash, PartialEq, Clone, Copy, Debug, serde::Deserialize)]
 #[serde(try_from = "u8")]
 pub struct Status(u8);
 
@@ -18,6 +18,10 @@ impl Status {
             Status(status)
         })
     }
+
+    pub unsafe fn from_u8_unsafe(status: u8) -> Status {
+        Status(status)
+    }
 }
 
 impl TryFrom<u8> for Status {
@@ -30,7 +34,7 @@ impl TryFrom<u8> for Status {
     }
 }
 
-#[derive(Clone, Copy, Debug, serde::Deserialize)]
+#[derive(Eq, Hash, PartialEq, Clone, Copy, Debug, serde::Deserialize)]
 #[serde(try_from = "u8")]
 pub struct DataByte(u8);
 
@@ -41,6 +45,10 @@ impl DataByte {
 
     pub fn from_u8(db: u8) -> Option<DataByte> {
         Option::when(db & U8_MSB_EXTRACTOR == 0, || DataByte(db))
+    }
+
+    pub unsafe fn from_u8_unsafe(status: u8) -> DataByte {
+        DataByte(status)
     }
 }
 
@@ -71,4 +79,7 @@ pub trait MidiSender {
     fn send_and_forget(&self, msg: MidiMessage) {
         let _ = self.send(msg);
     }
+}
+pub trait MidiReceiver {
+    fn poll(&self) -> Option<MidiMessage>;
 }
