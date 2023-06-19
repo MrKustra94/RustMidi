@@ -39,7 +39,7 @@ pub struct PadConfig {
 }
 
 #[derive(Debug, serde::Deserialize)]
-pub struct K8sMidiMapping {
+pub struct MidiMapping {
     pub controller_name: String,
     pub color_palette: Arc<actor::ColorMapping>,
     pub mappings: Vec<PadConfig>,
@@ -87,7 +87,7 @@ pub struct ParsedPadConfigs {
     pub pad_configs: Vec<ParsedPadConfig>,
 }
 
-pub fn parse(midi_mapping: K8sMidiMapping) -> ParsedPadConfigs {
+pub fn parse(midi_mapping: MidiMapping) -> ParsedPadConfigs {
     let pad_configs: Vec<ParsedPadConfig> = midi_mapping
         .mappings
         .into_iter()
@@ -109,7 +109,7 @@ pub fn parse(midi_mapping: K8sMidiMapping) -> ParsedPadConfigs {
     }
 }
 
-pub fn load_from_yaml<P: AsRef<Path>>(path: P) -> anyhow::Result<K8sMidiMapping> {
+pub fn load_from_yaml<P: AsRef<Path>>(path: P) -> anyhow::Result<MidiMapping> {
     let conf_file = std::fs::File::open(path)?;
     // Workaround for merge anchors.
     // Useful for better file readability.

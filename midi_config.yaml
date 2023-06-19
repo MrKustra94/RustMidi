@@ -1,0 +1,39 @@
+controller_name: DDJ-XP2
+# This palette contains information about state (e.g. OK, Not OK) to second data byte (e.g. 0x60) mapping.
+# Each MIDI controller may have different logic to interpret specific Data Bytes as colors.
+color_palette:
+  ok: 0x60
+  action_triggerred: 0x50
+  transient_error: 0x40
+  not_ok: 0x30
+  initial: 0x20
+  paused: 0x10
+# Defines the handler for pads in the controller.
+mappings:
+  - status: 0x97 # MIDI Status Byte
+    fst_data_byte: 0x0C # MIDI First Data Byte - mostly used together with Status to identify single pad
+    every_seconds: 10 # Defines the interval between latest response and next request
+    # Below definition is typical to Kubernetes deployment handler.
+    # Currently, tool assumes existence of KUBE configuration file locally.
+    # In order to make deployment reflected in a pad, its cluster definition must be present in local Kubernetes configuration.
+    type: K8S
+    context: test_context
+    namespace: test_namespace
+    deployment: test_redis
+    # Additional colors that may be used to signal Kubernetes Deployment status
+    depl_in_progress: 0x70
+    unknown: 0x71
+  - status: 0x97
+    fst_data_byte: 0x0D
+    every_seconds: 10
+    # Below definition is typical to Script handler.
+    # Script handler executes defined script at defined interval, reflecting its status to pad.
+    # It is similar to e.g. Docker command configuration.
+    type: Script
+    envs:
+      WORLD: world
+    command: echo
+    args: ["$WORLD"]
+
+
+
